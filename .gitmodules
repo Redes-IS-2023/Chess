@@ -1,0 +1,9 @@
+[submodule "ChessUI"]
+path = ChessUI
+url = https://github.com/JoDaniel1412/ChessUI
+[submodule "API"]
+path = RestAPI
+url = https://github.com/JoDaniel1412/ChessUI
+[submodule "ChessEngine"]
+path = ChessEngine
+url = https://github.com/Orantoon/Redes_ProyectoOpcional.git
