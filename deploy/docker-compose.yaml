@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "8443:80"
+  webgl:
+    build:
+      context: ./chessui
+      dockerfile: Dockerfile
+    ports:
+      - "443:80"
+    depends_on:
+      - api
