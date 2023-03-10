@@ -51,8 +51,8 @@ bool valMoverReina(int posAct, int pos);
 bool valMoverPeon(char piezaAct, char piezaEnPos, int posAct, int pos);
 
 void moverPieza(int posAct, int pos);
-// +++ Jaque +++
-// +++ Jaque Mate +++
+bool jaque();
+bool jaquemate();
 
 char getPieza(int pos);
 
@@ -63,10 +63,28 @@ int main (){
 	crearJuego();
 
 	while (ganador == 0){
-		if (turnoAnf)
+		if (turnoAnf){
+			if (jaquemate()){
+				// +++ Avisar al anfitrion que perdio +++
+				break;
+			}
+			
+			if (jaque())
+				// +++ Avisar al anfitrion que le hicieron jaque +++
+
 			turnoAnfitrion();
-		else
+		}
+		else{
+			if (jaquemate()){
+				// +++ Avisar a los guests que perdieron +++
+				break;
+			}
+
+			if (jaque())
+				// +++ Avisar a los guests que les hicieron jaque +++
+
 			turnoGuests();
+		}
 	}
 
 	return 0;
@@ -102,10 +120,10 @@ void turnoAnfitrion(){
 	if (validarMovimiento(posAct, pos)){
 		moverPieza(posAct, pos);
 
-		if (turnoAnf)
-			turnoAnf = false;
-		else
-			turnoAnf = true;
+		turnoAnf = false;
+	} else {
+		// +++ Avisar al jugador que no es un movimiento valido ??? +++
+		turnoAnfitrion();	// Recursividad hasta que se escoja un movimiento valido
 	}
 }
 
@@ -121,6 +139,15 @@ void turnoGuests(){
 	// +++ Seleccionar posiciones mas votadas +++
 
 	// +++ Si hay empate, posiciones random en un while de validacion para que sea una jugada valida +++
+	
+	if (validarMovimiento(posAct, pos)){
+		moverPieza(posAct, pos);
+
+		turnoAnf = true;
+	} else {
+		// +++ Avisar al jugador que no es un movimiento valido ??? +++
+		turnoGuests();	// Recursividad hasta que se escoja un movimiento valido
+	}
 }
 
 // ==================================================
@@ -279,6 +306,16 @@ void moverPieza(int posAct, int pos){
 		}
 		count += 3;
 	}
+}
+
+
+bool jaque(){
+
+	return false;
+}
+bool jaquemate(){
+
+	return false;
 }
 
 // ==================================================
