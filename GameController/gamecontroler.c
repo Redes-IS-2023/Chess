@@ -1,12 +1,39 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<conio.h>
+#include <stdbool.h>
+#include <time.h>
 
 int numeroPartida;
-char tablero[8][8] = {};
 
-bool turnoAnf;
-int ganador;	// 0 si la partida no ha terminado, 1 Si gana el anfitrion, 2 si ganan los invitados
+// Las mayusculas son las piezas del blanco (Anfitrion), las minusculas del negro (Guests)
+	// Tt = Torre, Cc = Caballo, Aa = Alfil, Rr = Rey, Qq = Reina, Pp = Peon
+	/* Para las coordenadas de las posiciones se usara el siguiente formato
+
+		[00,01,02,03,04,05,06,07]
+		[10,11,12,13,14,15,16,17]
+		[20,21,22,23,24,25,26,27]
+		[30,31,32,33,34,35,36,37]
+		[40,41,42,43,44,45,46,47]
+		[50,51,52,53,54,55,56,57]
+		[60,61,62,63,64,65,66,67]
+		[70,71,72,73,74,75,76,77]
+
+	*/
+
+char tablero[8][8] = {
+                    { 'T' , 'C' , 'A' , 'R' , 'Q' , 'A' , 'C' , 'T' },
+                    { 'P' , 'P' , 'P' , 'P' , 'P' , 'P' , 'P' , 'P' },
+                    { ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' },
+                    { ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' },
+                    { ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' },
+                    { ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' },
+                    { 'p' , 'p' , 'p' , 'p' , 'p' , 'p' , 'p' , 'p' },
+                    { 't' , 'c' , 'a' , 'r' , 'q' , 'a' , 'c' , 't' }
+                    };
+
+bool turnoAnf = true;
+int ganador = 0;	// 0 si la partida no ha terminado, 1 Si gana el anfitrion, 2 si ganan los invitados
 
 
 void crearJuego();
@@ -29,7 +56,7 @@ void moverPieza(int posAct, int pos);
 char getPieza(int pos);
 
 
-main (){
+int main (){
 
 	crearJuego();
 
@@ -39,6 +66,8 @@ main (){
 		else
 			turnoGuests();
 	}
+
+	return 0;
 }
 
 
@@ -46,45 +75,17 @@ void crearJuego(){
 
 	// Numero random entre lower y upper para que sea el numero de partida
 	int lower = 1, upper = 50;
+	int num;
 	while (true){
 		
 		srand(time(0));
-		int num = (rand() % (upper - lower + 1)) + lower;
+		num = (rand() % (upper - lower + 1)) + lower;
 
 		// If el numero no existe
 		break;
 	}
 
 	numeroPartida = num;
-
-	// Las mayusculas son las piezas del blanco (Anfitrion), las minusculas del negro (Guests)
-	// Tt = Torre, Cc = Caballo, Aa = Alfil, Rr = Rey, Qq = Reina, Pp = Peon
-	/* Para las coordenadas de las posiciones se usara el siguiente formato
-
-		[00,01,02,03,04,05,06,07]
-		[10,11,12,13,14,15,16,17]
-		[20,21,22,23,24,25,26,27]
-		[30,31,32,33,34,35,36,37]
-		[40,41,42,43,44,45,46,47]
-		[50,51,52,53,54,55,56,57]
-		[60,61,62,63,64,65,66,67]
-		[70,71,72,73,74,75,76,77]
-
-	*/
-
-	tablero[8][8] = {
-                    { 'T' , 'C' , 'A' , 'R' , 'Q' , 'A' , 'C' , 'T' },
-                    { 'P' , 'P' , 'P' , 'P' , 'P' , 'P' , 'P' , 'P' },
-                    { ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' },
-                    { ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' },
-                    { ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' },
-                    { ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' },
-                    { 'p' , 'p' , 'p' , 'p' , 'p' , 'p' , 'p' , 'p' },
-                    { 't' , 'c' , 'a' , 'r' , 'q' , 'a' , 'c' , 't' }
-                    };
-
-	turnoAnf = true;
-	ganador = 0;
 }
 
 
@@ -95,15 +96,14 @@ void turnoAnfitrion(){
 	// Recibir Posicion Actual
 	// Recibir Posicion a Jugar
 
-	if (!validarMovimiento(posAct, pos))
-		return NULL;
-	
-	moverPieza(posAct, pos);
+	if (validarMovimiento(posAct, pos)){
+		moverPieza(posAct, pos);
 
-	if (turnoAnf)
-		turnoAnf = false;
-	else
-		turnoAnf = true;
+		if (turnoAnf)
+			turnoAnf = false;
+		else
+			turnoAnf = true;
+	}
 }
 
 bool validarMovimiento(int posAct, int pos){
@@ -149,7 +149,7 @@ char getPieza(int pos){
 		}
 		posAct += 3;
 	}
-	return NULL;
+	return ' ';
 }
 
 bool valMoverTorre(int posAct, int pos){}
