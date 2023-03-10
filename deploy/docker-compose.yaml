@@ -3,7 +3,7 @@ version: "3.8"
 services:
   api:
     build:
-      context: ./api
+      context: ../API-PO-REDES/RestAPI/Docker
       dockerfile: Dockerfile
     ports:
       - "8443:80"
