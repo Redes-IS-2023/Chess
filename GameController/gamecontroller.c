@@ -4,6 +4,21 @@
 #include <stdbool.h>
 #include <time.h>
 #include <ctype.h>
+#include <string.h>
+#include <winsock2.h>
+#include <json.h>
+//#include <pthread.h>
+
+#pragma comment(lib, "ws2_32.lib")
+
+#define BUF_SIZE 1024
+
+char buffer[1024];
+
+int sockfd, n;
+char buf[BUF_SIZE];
+struct sockaddr_in server_addr, client_addr;
+int client_len = sizeof(client_addr);
 
 int numeroPartida;
 
@@ -36,6 +51,10 @@ char tablero[8][8] = {
 bool turnoAnf = true;
 int ganador = 0; // 0 si la partida no ha terminado, 1 Si gana el anfitrion, 2 si ganan los invitados
 
+void recibirDatos();
+int recvPosAct();
+int recvPosDes();
+
 void crearJuego();
 void turnoAnfitrion();
 void turnoGuests();
@@ -59,6 +78,37 @@ char getPieza(int pos);
 int main()
 {
 
+	// --- Conexion Socket ---
+
+    // Inicializar Winsock
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        perror("Error al inicializar Winsock");
+        exit(1);
+    }
+
+    // Crear socket
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == SOCKET_ERROR) {
+        perror("Error al crear socket");
+        exit(1);
+    }
+
+    // Configurar dirección del servidor
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(6666);
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    // Asociar socket a dirección del servidor
+    if (bind(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+        perror("Error al asociar socket a dirección");
+        exit(1);
+    }
+
+    printf("Servidor UDP escuchando en el puerto UDP/6666\n");
+
+	// ---------------------
+
 	crearJuego();
 
 	while (ganador == 0)
@@ -74,7 +124,7 @@ int main()
 			if (jaque())
 				// +++ Avisar al anfitrion que le hicieron jaque +++
 
-				turnoAnfitrion();
+			turnoAnfitrion();
 		}
 		else
 		{
@@ -87,9 +137,15 @@ int main()
 			if (jaque())
 				// +++ Avisar a los guests que les hicieron jaque +++
 
-				turnoGuests();
+			turnoGuests();
 		}
 	}
+
+	// Cerrar socket
+    closesocket(sockfd);
+
+    // Liberar Winsock
+    WSACleanup();
 
 	return 0;
 }
@@ -116,13 +172,36 @@ void crearJuego()
 
 // ==================================================
 
+// Recibe informacion en forma de arreglo y la almacena en la variable global "buffer"
+void recibirDatos(){
+	while (1) {
+        // Recibir mensaje del cliente
+        n = recv(sockfd, buffer, 1024, 0);
+        if (n < 0) {
+            perror("Error al recibir mensaje");
+            continue;
+        }
+
+		break;
+    }
+}
+
+int recvPosAct(){
+
+}
+int recvPosDes(){
+
+}
+
+// ==================================================
+
 void turnoAnfitrion()
 {
 
-	int posAct;
-	int pos;
-	// +++ Recibir Posicion Actual +++
-	// +++ Recibir Posicion a Jugar +++
+	recibitDatos();
+	int posAct = recvPosAct();
+	int pos = recvPosDes();
+	free(buffer);
 
 	if (validarMovimiento(posAct, pos))
 	{

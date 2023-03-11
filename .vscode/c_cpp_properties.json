@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/Users/david/**",
+                "C:/Users/david/AppData/Local/Programs/GNU Octave/Octave-7.3.0/mingw64/include/llvm/Support",
+                "C:/Users/david/AppData/Local/Programs/GNU Octave/Octave-7.3.0/mingw64/include/llvm/Support",
+                "C:/Users/david/AppData/Local/Programs/GNU Octave/Octave-7.3.0/mingw64/include",
+                "C:/MinGW/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\MinGW\\bin\\gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "windows-gcc-x86"
+        }
+    ],
+    "version": 4
+}
