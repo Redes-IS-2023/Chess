@@ -16,12 +16,7 @@
 #define BUF_SIZE 1024
 
 char buffer[1024];
-
-int sockfd, n;
-char buf[BUF_SIZE];
-struct sockaddr_in server_addr, client_addr;
-int client_len = sizeof(client_addr);
-
+int client_socket;
 int numeroPartida;
 
 // Las mayusculas son las piezas del blanco (Anfitrion), las minusculas del negro (Guests)
@@ -56,6 +51,7 @@ int ganador = 0; // 0 si la partida no ha terminado, 1 Si gana el anfitrion, 2 s
 void recibirDatos();
 int recvPosAct();
 int recvPosDes();
+void enviarDatos(int movedFrom, int movedTo);
 
 void crearJuego();
 void turnoAnfitrion();
@@ -185,36 +181,43 @@ void encode(const unsigned char *buffer){
 int main()
 {
 
-	// --- Conexion Socket ---
-
-    // Inicializar Winsock
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        perror("Error al inicializar Winsock");
-        exit(1);
-    }
-
-    // Crear socket
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == SOCKET_ERROR) {
-        perror("Error al crear socket");
-        exit(1);
-    }
-
-    // Configurar dirección del servidor
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(6666);
-    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    // Asociar socket a dirección del servidor
-    if (bind(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-        perror("Error al asociar socket a dirección");
-        exit(1);
-    }
-
-    printf("Servidor UDP escuchando en el puerto UDP/6666\n");
-
-	// ---------------------
+	// ---------- Configuracion de Sockets -----------
+	
+	// Crear el socket
+	int ret;
+	
+	struct sockaddr_in server_address;
+	
+	client_socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (client_socket < 0){
+		printf("Error connecting to socket.\n\n");
+		exit(1);
+	}
+	
+	printf("Client Socket created successfully!\n\n");
+	
+	// Especificar el address
+	memset(&server_address, '\0', sizeof(server_address));
+	server_address.sin_family = AF_INET;
+	server_address.sin_port = htons(6666);
+	server_address.sin_addr.s_addr = INADDR_ANY;
+	
+	int yes = 1;
+	if (setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1){
+		perror("setsockopt");
+		exit(1);
+	}	
+	
+	// Conectar al server
+	ret = connect(client_socket, (struct sockaddr*)&server_address, sizeof(server_address));
+	if (ret < 0){
+		printf("Error in the connection.\n\n");
+		exit(1);
+	}
+	
+	printf("Client connected to server.\n\n");
+	
+	// -------------------------------------------
 
 	crearJuego();
 
@@ -249,12 +252,11 @@ int main()
 	}
 
 	// Cerrar socket
-    closesocket(sockfd);
-
-    // Liberar Winsock
-    WSACleanup();
+	printf("Nos vemos!\n");
+	close(client_socket);
 
 	return 0;
+
 }
 
 // Inicializa el juego dandole un numero random a la partida
@@ -281,9 +283,10 @@ void crearJuego()
 
 // Recibe informacion en forma de arreglo y la almacena en la variable global "buffer"
 void recibirDatos(){
+	bzero(buffer, sizeof(buffer));
 	while (1) {
         // Recibir mensaje del cliente
-        n = recv(sockfd, buffer, 1024, 0);
+        n = recv(client_socket, buffer, 1024, 0);
         if (n < 0) {
             perror("Error al recibir mensaje");
             continue;
@@ -294,10 +297,31 @@ void recibirDatos(){
 }
 
 int recvPosAct(){
-
+	struct json_object *parsedJSON;
+	struct json_object *movedFrom;
+	parsedJSON = json_tocken_parser(buffer);
+	json_object_object_get_ex(parsedJSON, "movedFrom", &movedFrom);
+	return movedFrom;
 }
 int recvPosDes(){
+	struct json_object *parsedJSON;
+	struct json_object *movedTo;
+	parsedJSON = json_tocken_parser(buffer);
+	json_object_object_get_ex(parsedJSON, "movedTo", &movedTo);
+	return movedTo;
+}
 
+void enviarDatos(int movedFrom, int movedTo){
+	int id = numeroPartida;
+	bool isTurn = false;
+	if (turnoAnf)
+		isTurn = true;
+	char type = getPieza(movedFrom);
+
+	// +++ Armar JSON y guardarlo en buffer +++
+
+	send(client_socket, buffer, sizeof(buffer), 0);
+	bzero(buffer, sizeof(buffer));
 }
 
 // ==================================================
@@ -305,20 +329,21 @@ int recvPosDes(){
 void turnoAnfitrion()
 {
 
-	recibitDatos();
+	recibirDatos();
 	int posAct = recvPosAct();
 	int pos = recvPosDes();
-	free(buffer);
+	bzero(buffer, sizeof(buffer));
 
 	if (validarMovimiento(posAct, pos))
 	{
 		moverPieza(posAct, pos);
 
 		turnoAnf = false;
+		enviarDatos(posAct, pos);
 	}
 	else
 	{
-		// +++ Avisar al jugador que no es un movimiento valido ??? +++
+		enviarDatos(-1, -1);
 		turnoAnfitrion(); // Recursividad hasta que se escoja un movimiento valido
 	}
 }
@@ -330,8 +355,10 @@ void turnoGuests()
 	int pos;
 	// +++ Thread loop por votacion para cada jugador ??? +++
 
-	// +++ Recibir Posicion Actual +++
-	// +++ Recibir Posicion a Jugar +++
+	recibirDatos();
+	int posAct = recvPosAct();
+	int pos = recvPosDes();
+	bzero(buffer, sizeof(buffer));
 
 	// +++ Seleccionar posiciones mas votadas +++
 
@@ -342,10 +369,11 @@ void turnoGuests()
 		moverPieza(posAct, pos);
 
 		turnoAnf = true;
+		enviarDatos(isTurn, posAct, pos);
 	}
 	else
 	{
-		// +++ Avisar al jugador que no es un movimiento valido ??? +++
+		enviarDatos(isTurn, -1, -1);
 		turnoGuests(); // Recursividad hasta que se escoja un movimiento valido
 	}
 }
